@@ -5,11 +5,18 @@
     import { onMount } from 'svelte';
     
     import type { PageServerData } from './$types';
+    import { toDecimalString } from '$lib';
     
     export let data: PageServerData;
 
     $: ({ santaCondition } = data)
-    $: showHistoryRow = 5
+    $: viewObject = {
+        showHistoryRow: 5,
+        avg: 0,
+        sum: 0,
+        min: 0,
+        max: 0
+    }
 
     const example = { heartRate : 65 }
 
@@ -20,6 +27,11 @@
 
                 return store
             })
+
+            viewObject.sum = $santaHeartRateStore.reduce((a, b) => a + b.heartRate, 0)
+            viewObject.avg = (viewObject.sum / $santaHeartRateStore.length) || 0
+            viewObject.min = $santaHeartRateStore.reduce((a, b) => Math.min(a, b.heartRate), santaCondition.heartRate)
+            viewObject.max = $santaHeartRateStore.reduce((a, b) => Math.max(a, b.heartRate), santaCondition.heartRate)
 
             await invalidateAll()
         }, 1000)
@@ -63,21 +75,33 @@
 <div class="row my-3">
     <Accordion title="Solution">
         <div class="text-center">
-            <h1 class="display-5 my-3">Current Santa Heart Rate: {santaCondition.heartRate}</h1>
+            <h1>Current Santa Heart Rate: </h1>
+            <p class="display-5 my-3">{santaCondition.heartRate}</p>
 
             <div class="card mt-5">
                 <div class="card-header">
-                    <h3>History of Santa Heart Rate</h3>
+                    <h3 class="my-3">History of Santa Heart Rate</h3>
+                </div>
+                <div class="card-body">
+                    {#each $santaHeartRateStore.slice(0, viewObject.showHistoryRow) as item, index}
+                        <p>
+                            <span>{index + 1}.</span> <span class="fw-bold">{item.heartRate} Heart Rate</span> on {item.createdDate}
+                        </p>
+                    {/each}
+                </div>
+                <div class="card-footer">
                     <div class="row">
-                        <div class="col-6">
-
+                        <div class="col-6 d-flex justify-content-evenly align-items-center">
+                            <h5>Min: {toDecimalString(viewObject.min)}</h5>
+                            <h5>Avg: {toDecimalString(viewObject.avg)}</h5>
+                            <h5>Max: {toDecimalString(viewObject.max)}</h5>
                         </div>  
                         <div class="col-6">
                             <div class="form-floating">
                                 <select class="form-select" id="selectShowRow" aria-label="Row to Show" on:change={e => {
-                                    showHistoryRow = parseInt(e.currentTarget.value)
+                                    viewObject.showHistoryRow = parseInt(e.currentTarget.value)
                                 }}>
-                                    <option value="5">Default</option>
+                                    <option value="5" aria-disabled="true" aria-selected="true" disabled selected>Default</option>
                                     <option value="5">5</option>
                                     <option value="10">10</option>
                                     <option value="20">20</option>
@@ -88,11 +112,7 @@
                             </div>
                         </div>  
                     </div>
-                </div>
-                <div class="card-bod">
-                    {#each $santaHeartRateStore.slice(0, showHistoryRow) as item, index}
-                        <p><span>{index + 1}.</span> {item.heartRate}</p>
-                    {/each}
+
                 </div>
             </div>
 

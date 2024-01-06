@@ -2,6 +2,7 @@ import { writable } from "svelte/store"
 
 export interface SantaHeartRate {
     heartRate: number
+    createdDate: Date
 }
 
 function getSantaHeartRate() {

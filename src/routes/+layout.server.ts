@@ -3,6 +3,7 @@ import type { IResponse } from '$routes/api/@types'
 import type { NavigationLink } from '$lib/components/@types'
 
 export const load = (async ({ fetch, url }) => {
+    let pageTitle: string | undefined
     const responseNavLink: IResponse<NavigationLink[]> = { status: 500, message: 'Not initialize', value: [] }
 
     try {
@@ -19,8 +20,21 @@ export const load = (async ({ fetch, url }) => {
         responseNavLink.message = err.message
         responseNavLink.value = []
     }
+
+    try {
+        if (responseNavLink.value.length < 1) throw Error()
+
+        const navlink = responseNavLink.value.filter(a => url.pathname === `/${a.url}`).at(0)
+
+        if (!navlink) throw Error()
+
+        pageTitle = navlink.title.split('|').at(1)?.trim()
+    } catch {
+        pageTitle = undefined
+    }
     
     return {
-        navlink: responseNavLink.value
+        pageTitle,
+        navlink: responseNavLink.value,
     }
 }) satisfies LayoutServerLoad

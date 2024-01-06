@@ -1,11 +1,16 @@
-import type { PageServerLoad } from './$types'
 import { ChildAndTally, type ChildAndTallyType } from './utils'
+import type { PageServerLoad } from './$types'
 
 export const load = (async ({ fetch }) => {
     let listChild: ChildAndTally[] = []
 
     try {
-        const response = await fetch(`https://advent.sveltesociety.dev/data/2023/day-one.json`)
+        const response = await fetch(`https://advent.sveltesociety.dev/data/2023/day-one.json`, {
+            method: 'GET',
+            headers: {
+                'content-type': 'application/json'
+            },
+        })
         const data = await response.json() as ChildAndTallyType[]
 
         if (data.length < 1) throw Error('Data empty', { cause: '404' })

@@ -8,7 +8,12 @@
     <nav class="nav flex-column">
         {#if listNavLinks.length > 0}
             {#each listNavLinks as navlink}
-                <a class="nav-link {url.href === `${url.origin}/${navlink.url}` ? 'active' : ''}" href={`${navlink.url}?title=${navlink.title.split('|').at(1)?.trim()}`}>{navlink.title}</a>
+                <a 
+                    class="nav-link {url.href.split('?').at(0) === `${url.origin}/${navlink.url}` ? 'bg-primary text-white rounded' : ''}" 
+                    href={`${url.origin}/${navlink.url}`}
+                >
+                    {navlink.title}
+                </a>
             {/each}
         {/if}
     </nav>

@@ -4,10 +4,12 @@ export interface ChildAndGiftWeightType {
 }
 
 export class ChildAndGiftWeight implements ChildAndGiftWeightType {
+    public id: number
     public name: string
     public weight: number
     
-    constructor(name: string, weight: number) {
+    constructor(id: number, name: string, weight: number) {
+        this.id = id
         this.name = name
         this.weight = weight
     }

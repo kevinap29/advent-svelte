@@ -2,16 +2,21 @@
     import { page } from '$app/stores';
     import { goto } from '$app/navigation'
 
+    import type { LayoutServerData } from './$types'
+
+    export let data: LayoutServerData
+
+    $: ({ pageTitle } = data)
     $: title = $page.url.searchParams.get('title')
     
 </script>
 
 <svelte:head>
-    <title>{title}</title>
+    <title>{pageTitle}</title>
 </svelte:head>
 
 <div class="container-fluid my-4">
-    <h1 class="mb-3 text-center">{title}</h1>
+    <h1 class="mb-5 mt-3 text-center" id={pageTitle?.split(' ').join('')}>{pageTitle}</h1>
     
     <slot />
 

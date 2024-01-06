@@ -37,8 +37,8 @@
             alert('Sleigh is overweight!')
             return
         }
-
-        listChild = listChild.filter(a => a.name != item.name && a.weight != item.weight)
+        
+        listChild = listChild.filter(a => a.id !== item.id)
         listSantaSleigh = [item, ...listSantaSleigh]
         totalSleighWeight = toDecimal(sumWeight)
         totalChildGiftWeight = toDecimalString(listChild.reduce((accumulator, next) => {
@@ -57,7 +57,7 @@
             return
         }
 
-        listSantaSleigh = listSantaSleigh.filter(a => a.name != item.name && a.weight != item.weight)
+        listSantaSleigh = listSantaSleigh.filter(a => a.id !== item.id)
         listChild = [item, ...listChild]
         totalSleighWeight = toDecimal(sumWeight)
         totalChildGiftWeight = toDecimalString(listChild.reduce((accumulator, next) => {
@@ -138,7 +138,7 @@
                                 <td>{child.name}</td>
                                 <td>{toDecimalString(child.weight)}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-success" on:click={async () => addToSleigh(new ChildAndGiftWeight(child.name, toDecimal(child.weight)).toJson())}>{`Add =>`}</button>
+                                    <button class="btn btn-sm btn-success" on:click={async () => addToSleigh(new ChildAndGiftWeight(child.id, child.name, toDecimal(child.weight)).toJson())}>{`Add =>`}</button>
                                 </td>
                             </tr>
                         {/each}
@@ -162,7 +162,7 @@
                                 <td>{child.name}</td> 
                                 <td>{toDecimalString(child.weight)}</td>
                                 <td> 
-                                    <button class="btn btn-sm btn-danger" on:click={async () => removeFromSleigh(new ChildAndGiftWeight(child.name, toDecimal(child.weight)).toJson())}>{`<= Remove`}</button> 
+                                    <button class="btn btn-sm btn-danger" on:click={async () => removeFromSleigh(new ChildAndGiftWeight(child.id, child.name, toDecimal(child.weight)).toJson())}>{`<= Remove`}</button> 
                                 </td> 
                             </tr> 
                         {/each} 

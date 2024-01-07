@@ -1,15 +1,33 @@
 <script lang="ts">
+    import Enumerable from "linq";
     import Accordion from "$lib/components/Accordion.svelte";
     import Table from "$lib/components/Table.svelte";
     import { invalidateAll } from "$app/navigation";
-    import { toDecimal, toDecimalString } from '$lib'
+    import { toDecimalString } from '$lib'
+    import { onMount } from "svelte";
 
     import type { PageServerData } from './$types';
-    import type { Task } from "./utils";
+    import type { Task, TaskType, ViewObjectDay5 } from "./utils";
     
     export let data: PageServerData;
 
-    $: ({ elfGroupingProductivity } = data)
+    $: ({ elfProductivity, elfGroupingProductivity } = data)
+    $: viewObject = {
+        listTaskType: [],
+        selectedListTaskType: 'ALL',
+        aggregateListTask: {
+            avgCreatedToysHours: 0,
+            avgCreatedToysMinutes: 0,
+            avgWrappedPresentHours: 0,
+            avgWrappedPresentMinutes:0,
+            countCreatedToys: 0,
+            countWrappedPresent: 0,
+            sumCreatedToysHours: 0,
+            sumCreatedToysMinutes: 0,
+            sumWrappedPresentHours: 0,
+            sumWrappedPresentMinutes:0,
+        }
+    } as ViewObjectDay5
 
     const example: Task[] = [
         {
@@ -25,6 +43,106 @@
             "date": "2024-01-05T00:18:00.000Z"
         }
     ]
+
+    async function aggregateElfProductivity() {
+        const createdToys = Enumerable.from(elfProductivity)
+            .where(a => a.task === 'CREATED_TOY')
+            .select(a => a)
+        const wrappedPresent = Enumerable.from(elfProductivity)
+            .where(a => a.task === 'WRAPPED_PRESENT')
+            .select(a => a)
+
+        viewObject.aggregateListTask.avgCreatedToysHours = createdToys.select(a => a.hoursTaken)
+            .average()
+        viewObject.aggregateListTask.avgCreatedToysMinutes = createdToys.select(a => a.minutesTaken)
+            .average()
+        viewObject.aggregateListTask.avgWrappedPresentHours = wrappedPresent.select(a => a.hoursTaken)
+            .average()
+        viewObject.aggregateListTask.avgWrappedPresentMinutes = wrappedPresent.select(a => a.minutesTaken)
+            .average()
+        viewObject.aggregateListTask.sumCreatedToysHours = createdToys.select(a => a.hoursTaken)
+            .sum()
+        viewObject.aggregateListTask.sumCreatedToysMinutes = createdToys.select(a => a.minutesTaken)
+            .sum()
+        viewObject.aggregateListTask.sumWrappedPresentHours = wrappedPresent.select(a => a.hoursTaken)
+            .sum()
+        viewObject.aggregateListTask.sumWrappedPresentMinutes = wrappedPresent.select(a => a.minutesTaken)
+            .sum()
+        viewObject.aggregateListTask.countCreatedToys = createdToys.count()
+        viewObject.aggregateListTask.countWrappedPresent = wrappedPresent.count()
+    }
+
+    async function filterByTaskType(task: TaskType | 'ALL') {
+        const filterGroupedTo = async (taskType: TaskType) => {
+            return Enumerable.from(elfGroupingProductivity)
+                .where(a => a.task === taskType)
+                .toArray()
+        }
+        const filterTo = async (taskType: TaskType) => {
+            return Enumerable.from(elfProductivity)
+                .where(a => a.task === taskType)
+                .toArray()
+        }
+
+        switch (task) {
+            case 'ALL':
+                await invalidateAll()
+                await aggregateElfProductivity()
+                break;
+
+            case 'CREATED_TOY':
+                await invalidateAll()
+
+                elfGroupingProductivity = await filterGroupedTo(task)
+                elfProductivity = await filterTo(task)
+
+                await aggregateElfProductivity()
+                break;
+                
+            case 'WRAPPED_PRESENT':
+                await invalidateAll()
+
+                elfGroupingProductivity = await filterGroupedTo(task)
+                elfProductivity = await filterTo(task)
+
+                await aggregateElfProductivity()
+                break;
+        
+            default:
+                await invalidateAll()
+                await aggregateElfProductivity()
+                break;
+        }
+    }
+
+    async function handleFilterByTask(e: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
+        const taskType = e.currentTarget.getAttribute('data-task-type')
+
+        if (!taskType) return
+        
+        viewObject.selectedListTaskType = taskType as TaskType | 'ALL'
+
+        // await filterByTaskType(viewObject.selectedListTaskType, elfGrouping)
+        await filterByTaskType(viewObject.selectedListTaskType)
+    }
+
+    onMount(() => {
+        viewObject.listTaskType = Enumerable.from(elfGroupingProductivity)
+            .select(a => a.task)
+            .distinct()
+            .toArray()
+        
+        viewObject.listTaskType.unshift('ALL')
+        
+        const interval = setInterval(async () => {
+            // await filterByTaskType(viewObject.selectedListTaskType, elfGrouping)
+            await filterByTaskType(viewObject.selectedListTaskType)
+        }, 1000)
+
+        return () => {
+            clearInterval(interval)
+        }
+    })
 </script>
 
 <div class="row my-3">
@@ -82,29 +200,123 @@
 
 <div class="row my-3">
     <Accordion title="Solution">
-        <Table striped>
-            <svelte:fragment slot="thead">
-                <th scope="col">#</th>
-                <th scope="col">Elf</th>
-                <th scope="col">Task</th>
-                <th scope="col">Minutes</th>
-                <th scope="col">Hours</th>
-            </svelte:fragment>
+        <div class="card m-3">
+            <div class="card-header text-center position-relative">
+                <h3>Total</h3>
+                <div class="position-absolute top-0 end-0">
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">filter</button>
 
-            <svelte:fragment slot="tbody">
-                {#each elfGroupingProductivity as productivity}
-                    <tr>
-                        <th scope="row">{productivity.id}</th>
-                        <td>{productivity.elf}</td>
-                        <td>{productivity.task}</td>
-                        <td>{toDecimalString(productivity.minutesTaken)}</td>
-                        <td>{toDecimalString(productivity.hoursTaken)}</td>
-                        <!-- <td>
-                            <button class="btn btn-sm btn-success" on:click={async () => addToSleigh(new ChildAndGiftWeight(child.id, child.name, toDecimal(child.weight)).toJson())}>{`Add =>`}</button>
-                        </td> -->
-                    </tr>
-                {/each}
-            </svelte:fragment> 
-        </Table> 
+                        <ul class="dropdown-menu">
+                            {#each viewObject.listTaskType as task }
+                                <li>
+                                    <button class="btn dropdown-item {viewObject.selectedListTaskType === task ? 'active' : ''}" data-task-type={task} 
+                                        on:click={handleFilterByTask}
+                                    >
+                                        {task}
+                                    </button>
+                                </li>
+                            {/each}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body d-flex justify-content-evenly align-items-center">
+                <p>
+                    <span class="fw-bold">Total Toy's create:</span> {viewObject.aggregateListTask.countCreatedToys}
+                </p>
+                <p>
+                    <span class="fw-bold">Total Present's wrapped:</span> {viewObject.aggregateListTask.countWrappedPresent} 
+                </p>
+            </div>
+        </div>
+        <div class="row p-0 m-0">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header text-center"><h3>Average</h3></div>
+                    <div class="card-body row p-0 m-0">
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Toy's create/hour: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.avgCreatedToysHours)}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Toy's create/minute: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.avgCreatedToysMinutes)}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Present's wrapped/hour: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.avgWrappedPresentHours)}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Present's wrapped/minute: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.avgWrappedPresentMinutes)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header text-center"><h3>Sum</h3></div>
+                    <div class="card-body row p-0 m-0">
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Toy's create/hour: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.sumCreatedToysHours)}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Toy's create/minute: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.sumCreatedToysMinutes)}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Present's wrapped/hour: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.sumWrappedPresentHours)}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <span class="fw-bold">Present's wrapped/minute: </span>
+                                <br>{toDecimalString(viewObject.aggregateListTask.sumWrappedPresentMinutes)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row my-3">
+            <h3 class="text-center my-3">Data</h3>
+            <Table striped>
+                <svelte:fragment slot="thead">
+                    <th scope="col">#</th>
+                    <th scope="col">Elf</th>
+                    <th scope="col">Task</th>
+                    <th scope="col">Minutes</th>
+                    <th scope="col">Hours</th>
+                </svelte:fragment>
+    
+                <svelte:fragment slot="tbody">
+                    {#each elfGroupingProductivity as productivity}
+                        <tr>
+                            <th scope="row">{productivity.id}</th>
+                            <td>{productivity.elf}</td>
+                            <td>{productivity.task}</td>
+                            <td>{toDecimalString(productivity.minutesTaken)}</td>
+                            <td>{toDecimalString(productivity.hoursTaken)}</td>
+                        </tr>
+                    {/each}
+                </svelte:fragment> 
+            </Table> 
+        </div>
     </Accordion>
 </div>

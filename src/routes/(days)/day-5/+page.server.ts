@@ -4,6 +4,7 @@ import type { PageServerLoad } from './$types';
 
 export const load = (async () => {
     let elfProductivity: Task[] = []
+    let elfGrouping: TaskGrouping[] = []
     let elfGroupingProductivity: TaskGrouping[] = []
 
     try {
@@ -20,6 +21,16 @@ export const load = (async () => {
         elfProductivity = data
     } catch {
         elfProductivity = []
+    }
+
+    try {
+        if (elfProductivity.length < 1) throw Error()
+
+        elfGrouping = elfProductivity.map<TaskGrouping>((a, index) => {
+            return new TaskGrouping(index + 1, a.elf, a.task, a.minutesTaken).toJson()
+        })
+    } catch {
+        elfGrouping = []
     }
 
     try {
@@ -51,7 +62,7 @@ export const load = (async () => {
         elfGroupingProductivity = []
     }
     return {
-        // elfProductivity,
+        elfProductivity: elfGrouping,
         elfGroupingProductivity
     };
 }) satisfies PageServerLoad;

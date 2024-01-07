@@ -14,6 +14,25 @@ export interface ITaskGrouping extends Omit<Task, 'date'> {
 	hoursTaken: number
 }
 
+export interface AggregateTaskProduction {
+	countCreatedToys: number
+	countWrappedPresent: number
+	avgCreatedToysMinutes: number
+	avgWrappedPresentMinutes: number
+	avgCreatedToysHours: number
+	avgWrappedPresentHours: number
+	sumCreatedToysMinutes: number
+	sumWrappedPresentMinutes: number
+	sumCreatedToysHours: number
+	sumWrappedPresentHours: number
+}
+
+export interface ViewObjectDay5 {
+	listTaskType: Array<TaskType | 'ALL'>
+	selectedListTaskType: TaskType | 'ALL'
+	aggregateListTask: AggregateTaskProduction
+}
+
 export class TaskGrouping implements ITaskGrouping {
 	public id: number
 	public hoursTaken: number;

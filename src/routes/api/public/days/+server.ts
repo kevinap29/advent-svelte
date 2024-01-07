@@ -13,6 +13,8 @@ export const GET = (async ({ url }) => {
             { url: 'day-3', title: 'Day 3 | Jingle Bell Balancer' },
             { url: 'day-4', title: 'Day 4 | Heart of Christmas' },
             { url: 'day-5', title: 'Day 5 | Present Progress' },
+            { url: 'day-6', title: 'Day 6 | Misteltoe Metronome' },
+            { url: 'day-7', title: 'Day 7 | Morse Mischief' },
         ]
     } as IResponse<NavigationLink[]>)    
 }) satisfies RequestHandler;

@@ -1,5 +1,6 @@
-import type { PageServerLoad } from './$types';
 import { ChildAndGiftWeight, type ChildAndGiftWeightType } from './utils'
+
+import type { PageServerLoad } from './$types';
 
 export const load = (async () => {
     let listChild: ChildAndGiftWeight[]

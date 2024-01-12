@@ -1,5 +1,6 @@
-import { writable, readable, derived, type Readable } from 'svelte/store'
 import Enumerable from 'linq'
+import { dateTimeStore } from '$lib'
+import { writable, readable, derived, type Readable } from 'svelte/store'
 
 //#region SantaDeck
 type SantaDeckState = 'open' | 'close'
@@ -94,16 +95,6 @@ interface SantaDeckGameHandler {
     activeCheat: boolean
 }
 
-const time = readable(0, set => {
-    const interval = setInterval(() => {
-        set(new Date().getTime())
-    }, 1000)
-
-    return () => {
-        clearInterval(interval)
-    }
-})
-
 const _handler: SantaDeckGameHandler = {
     playerPick: { id: 0, index: 0 },
     time: readable(0),
@@ -126,7 +117,7 @@ function getSantaDeckGameHandler() {
         startGame: () => {
             update(store => {
                 const start = new Date().getTime()
-                store.time = derived<Readable<number>, number>(time, ($time: number) => Math.round(($time - start) / 1000))
+                store.time = derived<Readable<number>, number>(dateTimeStore, ($time: number) => Math.round(($time - start) / 1000))
 
                 return store
             })
@@ -137,6 +128,8 @@ function getSantaDeckGameHandler() {
                 store.isWinning = false
                 store.winningTime = 0
                 store.activeCheat = false
+
+                santaDeckStore.closeAll()
 
                 return store
             })

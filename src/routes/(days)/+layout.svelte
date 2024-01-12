@@ -1,14 +1,26 @@
 <script lang="ts">
+    import Enumerable from 'linq'
     import { page } from '$app/stores';
     import { goto } from '$app/navigation'
+    import { writable } from 'svelte/store'
 
     import type { LayoutServerData } from './$types'
+    import type { NavigationLink } from '$lib/components/@types';
 
     export let data: LayoutServerData
 
-    $: ({ pageTitle } = data)
-    $: title = $page.url.searchParams.get('title')
-    
+    $: ({ pageTitle, navLink } = data)
+
+    function getNavLinks() {
+        const { subscribe, update } = writable<{prev?: NavigationLink, next?: NavigationLink }>({})
+
+        return {
+            subscribe,
+            update,
+        }
+    }
+
+    const navLinkStore = getNavLinks()
 </script>
 
 <svelte:head>

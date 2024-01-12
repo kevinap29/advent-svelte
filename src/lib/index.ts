@@ -1,3 +1,15 @@
+import { readable } from 'svelte/store'
+
+export const dateTimeStore = readable(0, set => {
+    const interval = setInterval(() => {
+        set(new Date().getTime())
+    }, 1000)
+
+    return () => {
+        clearInterval(interval)
+    }
+})
+
 export async function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }

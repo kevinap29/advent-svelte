@@ -2,10 +2,10 @@
     import Accordion from '$lib/components/Accordion.svelte';
     import { santaHeartRateStore } from './utils'
     import { invalidateAll } from '$app/navigation';
+    import { toDecimalString } from '$lib';
     import { onMount } from 'svelte';
     
     import type { PageServerData } from './$types';
-    import { toDecimalString } from '$lib';
     
     export let data: PageServerData;
 

@@ -1,21 +1,16 @@
 <script lang="ts">
     import Enumerable from 'linq';
+    import Accordion from '$lib/components/Accordion.svelte';
     import { onMount } from 'svelte';
-    import { santaDeckStore, santaDeckGameHandlerStore } from './utils'
     import { delay } from '$lib';
-    // import type { PageServerData } from './$types'; 
+    import { readable } from 'svelte/store';
+    import { santaDeckStore, santaDeckGameHandlerStore } from './utils'
     
-    // export let data: PageServerData;
-    
-    $: gameTime = 0
+    let newGameTime = readable(0)
 
     async function handleBtnStart() {
         santaDeckGameHandlerStore.startGame()
-        santaDeckGameHandlerStore.subscribe(store => {
-            store.time.subscribe(t => {
-                if (t > 0) gameTime = t
-            })
-        })
+        newGameTime = $santaDeckGameHandlerStore.time
     }
 
     async function handleCardOpen(id: number, index: number) {
@@ -62,44 +57,75 @@
 
         santaDeckStore.shuffle()
 
-        return () => {
-            $santaDeckGameHandlerStore.time.subscribe(t => {
-                gameTime = t
-            })
-        }
+        // return () => {
+        //     $santaDeckGameHandlerStore.time.subscribe(t => {
+        //         gameTime = t
+        //     })
+        // }
     })
 </script>
 
 
-<div class="container-fluid">
-    <div class="row">
-        {#if gameTime > 0}
-        <div class="text-center">
-            <h1>Time: </h1>
-            <p class="display-6">{gameTime}</p>
-        </div>
-        {/if}
-        <div class="d-flex justify-content-evenly align-items-center">
-            <button class="btn btn-primary text-white" disabled={gameTime > 0} on:click={e => handleBtnStart()}>start</button>
+<div class="row my-3">
+    <Accordion title="Story" open>
+        <p>
+            Under the shimmering aurora of the North Pole night, Santa made a captivating discovery that sparked a twinkle in his eye. Tucked away beneath a collection of ancient maps in his cozy study, he unearthed a set of playing cards, each pair graced with enchanting intricate designs. This Deck of Doubles, consisting of 24 unique pairs, was unlike anything Santa had ever seen.
+        </p>
+        <p>
+            Intrigued by this mysterious find, Santa, known for his love of puzzles and games, saw an opportunity for a delightful pre-Christmas activity. He decided to turn this Deck of Doubles into a memory game, a fun way to keep himself and Mrs. Claus sharp during the bustling holiday season.
+        </p>
+        <p>
+            Your challenge is to bring Santa's idea to life by creating a digital memory game based on this magical deck. The game involves flipping over two cards at a time, with the aim of finding matching pairs. He'd like the game to include a feature for keeping track of the high score and a timer to measure how quickly players can match all pairs.
+        </p>
+        <p>
+            You can find the pictures for the cards by visiting 
+            <span>
+                <a href="https://advent.sveltesociety.dev/data/2023/day-eight/NUMBER.png">
+                    https://advent.sveltesociety.dev/data/2023/day-eight/NUMBER.png
+                </a>
+            </span> where NUMBER is a number from 1 to 24 inclusive.
+        </p>
+    </Accordion>
+</div>
 
-            <button class="btn btn-warning text-dark" on:click={e => santaDeckGameHandlerStore.resetGame()}>reset</button>
-
-            <button class="btn btn-danger text-white" disabled={gameTime > 0 && $santaDeckGameHandlerStore.activeCheat} on:click={e => santaDeckGameHandlerStore.activeCheat()}>cheat</button>
-        </div>
-    </div>
-
-    {#if gameTime > 0}
-        {#each $santaDeckStore as image, index}
-            {#if image.state === 'close'}
-            <button class="btn position-relative" on:click={() => handleCardOpen(image.id, index)}>
-                {#if $santaDeckGameHandlerStore.activeCheat}
-                <span class="position-absolute top-0 start-50 translate-middle-x bg-dark text-white" style="width: 30px;">{image.id}</span>
+<div class="row my-3">
+    <Accordion title="Solution">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                {#if $newGameTime > 0}
+                <div class="text-center">
+                    <h1>Time: </h1>
+                    <p class="display-6">{$newGameTime}</p>
+                </div>
                 {/if}
-                <img src="{image.placeholder}" alt="{`Card id: ${image.id}`}" class="p-2 img-thumbnail">
-            </button>
-            {:else}
-            <img src="{image.url}" alt="{`Card id: ${image.id}`}" class="p-2 img-thumbnail">
+                <div class="d-flex justify-content-evenly align-items-center">
+                    <button class="btn btn-primary text-white" disabled={$newGameTime > 0} on:click={e => handleBtnStart()}>start</button>
+        
+                    <button class="btn btn-warning text-dark" on:click={e => {
+                        santaDeckGameHandlerStore.resetGame()
+                        newGameTime = readable(0)
+                    }}>reset</button>
+        
+                    <button class="btn btn-danger text-white" disabled={$newGameTime > 0 && $santaDeckGameHandlerStore.activeCheat} on:click={e => santaDeckGameHandlerStore.activeCheat()}>cheat</button>
+                </div>
+            </div>
+        
+            {#if $newGameTime > 0}
+                {#each $santaDeckStore as image, index}
+                    {#if image.state === 'close'}
+                    <button class="btn position-relative" on:click={() => handleCardOpen(image.id, index)}>
+                        {#if $santaDeckGameHandlerStore.activeCheat}
+                        <span class="position-absolute top-0 start-50 translate-middle-x bg-dark text-white" style="width: 30px;">{image.id}</span>
+                        {/if}
+                        <img src="{image.placeholder}" alt="{`Card id: ${image.id}`}" class="p-2 img-thumbnail">
+                    </button>
+                    {:else}
+                    <button class="btn position-relative">
+                        <img src="{image.url}" alt="{`Card id: ${image.id}`}" class="p-2 img-thumbnail">
+                    </button>
+                    {/if}
+                {/each}
             {/if}
-        {/each}
-    {/if}
+        </div>
+    </Accordion>
 </div>

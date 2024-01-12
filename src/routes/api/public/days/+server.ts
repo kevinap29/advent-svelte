@@ -16,6 +16,9 @@ export const GET = (async ({ url }) => {
             { url: 'day-6', title: 'Day 6 | Misteltoe Metronome' },
             { url: 'day-7', title: 'Day 7 | Morse Mischief' },
             { url: 'day-8', title: "Day 8 | Santa's Mysterious Deck of Doubles" },
+            { url: 'day-9', title: "Day 9 | Santa's Final Countdown" },
+            { url: 'day-10', title: "Day 10 | Pop-up! Spreading the holiday cheer" },
+            { url: 'day-11', title: "Day 11 | Tinsel Transformers" },
         ]
     } as IResponse<NavigationLink[]>)    
 }) satisfies RequestHandler;
